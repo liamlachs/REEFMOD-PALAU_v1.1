@@ -1,8 +1,8 @@
-% REEFMOD-GBR model run script
-%
-% Yves-Marie Bozec, y.bozec@uq.edu.au, 08/2022
+% REEFMOD-PALAU model run script
 %
 % Updated by Liam Lachs, liamlachs@gmail.com, 12/2023
+%
+% Yves-Marie Bozec, y.bozec@uq.edu.au, 08/2022
 %
 %__________________________________________________________________________
 
