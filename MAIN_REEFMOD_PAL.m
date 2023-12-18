@@ -29,7 +29,7 @@ g = 1;
 
 clearvars -except h2 ssp gcm g ss BH_a BH_b
 
-SaveDir ='';
+SaveDir ='outputs';
 
 NB_SIMULATIONS = 1; % Number of repeated runs
 
