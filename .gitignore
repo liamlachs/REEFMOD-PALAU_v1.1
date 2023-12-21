@@ -30,5 +30,5 @@ codegen/
 # Octave session info
 octave-workspace
 
-# all files in the outputs folder
- outputs
+# any matlab output files in the outputs folder
+outputs/*.m
