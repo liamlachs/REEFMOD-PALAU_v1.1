@@ -21,11 +21,11 @@
 %      MAIN_REEFMOD_PAL(0.3, 1  ,gcm ,0,0,0)
 % end
 
-parfor gcm = [1:16] % 
-%     for ssp = [ 1 2 4 ] 
-        for ET_multiplier = [-0.5:.1:-0.1, 0.1:.1:-0.5]% [-1, -0.8 -0.6, 0.6, 0.8, 1] % [-0.4, -0.2, 0.2, 0.4]
-            m = ET_multiplier;
-            MAIN_REEFMOD_PAL(0.3, 1  ,gcm ,m,m,-m)
-        end
-%     end
-end
+% parfor gcm = [1:16] % 
+% %     for ssp = [ 1 2 4 ] 
+%         for ET_multiplier = [-0.5:.1:-0.1, 0.1:.1:-0.5]% [-1, -0.8 -0.6, 0.6, 0.8, 1] % [-0.4, -0.2, 0.2, 0.4]
+%             m = ET_multiplier;
+%             MAIN_REEFMOD_PAL(0.3, 1  ,gcm ,m,m,-m)
+%         end
+% %     end
+% end

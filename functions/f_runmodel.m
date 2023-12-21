@@ -1,11 +1,12 @@
 % -------------------------------------------------------------------------
+% Updated by Liam Lachs to include heat toleance adaptation, 12/2023
 % Y.-M. Bozec, MSEL, created Nov 2011.
 % Last modified: 08/2022
 %
 % REEFMOD RUN FILE
 % -------------------------------------------------------------------------
 
-% need to add horizontal shift for heritability ny comparing to ancestral
+% need to add horizontal shift for heritability by comparing to ancestral
 % distribution
 
 % This function runs 1 simulation of ReefMod, either for a single reef or multiple reefs
@@ -38,8 +39,8 @@ metapop(META.nb_reefs).coral = {} ;
 metapop(META.nb_reefs).algal = {} ;
 metapop(META.nb_reefs).genes = {} ;
 
-if META.doing_bleaching == 1   
-    load('BleachingModelHughes.mat')       
+if META.doing_bleaching == 1
+    load('BleachingModelHughes.mat')
 end
 
 % 'RESULT' stores the outcome of variables over the grid at the end of each time step (ie, t+1) for every reef
@@ -77,13 +78,13 @@ if META.doing_COTS==1
     RESULT.COTS_larval_supply = zeros(META.nb_reefs, META.nb_time_steps+1);
     RESULT.COTS_larval_output = zeros(META.nb_reefs, META.nb_time_steps+1);  % amount of larvae produced per reef (fecundity*area*survival)
     RESULT.COTS_fecundity = zeros(META.nb_reefs, META.nb_time_steps+1); % amount of larvae per grid (direct output of adult density)
-    RESULT.COTS_adult_densities = zeros(META.nb_reefs, META.nb_time_steps+1);   
+    RESULT.COTS_adult_densities = zeros(META.nb_reefs, META.nb_time_steps+1);
     % Note: outputs of CoTS control are all in RESULT.COTS_records (created in the CoTS control module)
 end
 
 if META.tracking_rubble ==1
     RESULT.rubble_cover_pct2D = zeros(META.nb_reefs, META.nb_time_steps+1) ;
-    RESULT.rubble_cover_pct2D(:,1)= cat(1,REEF(1:META.nb_reefs).initial_rubble_pct) ; 
+    RESULT.rubble_cover_pct2D(:,1)= cat(1,REEF(1:META.nb_reefs).initial_rubble_pct) ;
 end
 
 
@@ -105,14 +106,14 @@ RECORD.applied_bleaching_mortality = zeros(META.nb_reefs, META.nb_time_steps,'si
 RECORD.hurricane_events = uint8(zeros(META.nb_reefs, META.nb_time_steps)) ;
 RECORD.hurricane_parm_k = zeros(META.nb_reefs, META.nb_time_steps);
 
-if META.doing_restoration == 1   
+if META.doing_restoration == 1
     RECORD.total_outplanted = zeros(META.nb_reefs, META.nb_time_steps, length(META.outplant_species)) ;
     RECORD.outplanted_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ;
     RECORD.total_enriched = zeros(META.nb_reefs, META.nb_time_steps, length(META.enriched_species)) ;
     RECORD.enriched_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ;
     RECORD.rubble_cover_pct2D_stabilised = zeros(META.nb_reefs, META.nb_time_steps) ;
-    RECORD.stabilised_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ; 
-    RECORD.fogged_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ; 
+    RECORD.stabilised_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ;
+    RECORD.fogged_reefs = uint16(zeros(META.nb_reefs, META.nb_time_steps+1)) ;
     RESULT.coral_pct2D_restored_sites = RESULT.coral_pct2D;
     never_deployed = ones(META.nb_reefs,1);
 end
@@ -128,7 +129,7 @@ colony_list = zeros(1,6);
 environ_list = zeros(1,5);
 convert_area_ha = (10^8)/META.total_area_cm2;
 
-if META.doing_coral_connectivity == 0   
+if META.doing_coral_connectivity == 0
     META.area_habitat = ones(META.nb_reefs,1); % needs to be defined if connectivity is OFF
 end
 
@@ -165,7 +166,7 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
     
     %%%%%% INITIALISE THE GRID WITH CORALS AND ALGAE %%%%%%%%%%%%%%%%%%%%%%
     [metapop(n).coral, metapop(n).algal] = f_initialise_population(META, REEF(n), CORAL) ;
-        
+    
     %%%%%% SET UP 3D %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if META.doing_3D == 1
         % Estimate surface, volume of living and dead (after erosion) colonies.
@@ -183,7 +184,7 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
     % Reminder: t=0 at initialization
     if META.doing_COTS == 1
         
-%         if REEF_COTS.densities_M(n,t+1) > -1 % if empirical estimate available
+        %         if REEF_COTS.densities_M(n,t+1) > -1 % if empirical estimate available
         if isnan(REEF_COTS.densities_M(n,t+1))==0  % if empirical observation is available
             
             switch META.randomize_initial_COTS_densities
@@ -255,9 +256,9 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
             end
         end
     end
-   
+    
     % TESTING
-%     REEF(n).predicted_DHWs = 8;
+    %     REEF(n).predicted_DHWs = 8;
     
     %%%%%% SET UP BLEACHING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if META.doing_bleaching == 1 && META.doing_DHWbleaching == 0
@@ -265,11 +266,11 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
         bleaching_mortalities(n,:) = f_generate_bleaching_mortalities(BleachingLinearModel,REEF(n).predicted_DHWs, META.deterministic_bleaching) ;
         bleaching_mortalities(n,2:2:end) = 0; % no bleaching in winter
     end
-
+    
     
     %%%%%% STORE INITIAL COVERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Reminder: t=0 at initialization
-
+    
     % 1) Algal cover: total cover (%) of each algal type over the grid at initial step
     RESULT.algal_pct(n,t+1,1:META.nb_algal_types) = 100*full(sum([metapop(n).algal(1:META.nb_algal_types).cover_cm2]))./sum(REEF(n).substrate_SA_cm2) ;
     
@@ -294,13 +295,13 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
             RESULT.nb_super_tolerant_colonies(n,t+1,s) = sum(full(living_coral_heat_tolerances <= CORAL.DHWbleaching_mortality_Intercept_super_tolerant(s)),'all');
             % number of fecund colonies
             RESULT.nb_fecund_colonies(n,t+1,s) = sum(metapop(n).coral(s).cover_cm2 > CORAL.fecund_min_size(s),'all');
-            if META.doing_coral_age == 1    
+            if META.doing_coral_age == 1
                 RESULT.age_fecund_colonies(n,t+1,s) = median(metapop(n).coral(s).coral_age(metapop(n).coral(s).cover_cm2  > CORAL.fecund_min_size(s)),'all');
             end
             RESULT.heat_tolerances_mu_fecund_colonies(n,t+1,s) = full(mean(metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2 >= CORAL.fecund_min_size(s)),'all'));
             % Population mean HT for all of Palau weighted by occurence of fecund corals by reef
             RESULT.pop_heat_tolerances_mu_fecund_colonies(t+1,s) = sum(RESULT.heat_tolerances_mu_fecund_colonies(n,t+1,s).* (RESULT.nb_fecund_colonies(:,t+1,s)/sum(RESULT.nb_fecund_colonies(:,t+1,s))));
-
+            
         end
         
         % Estimaton of living and dead carbonate volumes (per species)
@@ -347,7 +348,7 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
             metapop(META.nb_reefs).genes(s).locus = {} ;
             
             if META.genetics.group(s)==1
-                            
+                
                 list_coral_ID = metapop(n).coral(s).colony_ID(metapop(n).coral(s).colony_ID~=0);
                 idx = randi(META.genetics_pop_size,length(list_coral_ID),1);
                 
@@ -359,16 +360,16 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
                 BREED = sum(sum(metapop(n).genes(s).QTLs,3),2) ;
                 % Then determine phenotype following heritability (esd=0 implies perfect heritability)
                 Env_effect = normrnd(0, META.genetics.esd(s), size(BREED));
-%                 Env_effect(Env_effect>4) = 4; % Limit the environmental effect (add no more that +6 deg C to BREED)
+                %                 Env_effect(Env_effect>4) = 4; % Limit the environmental effect (add no more that +6 deg C to BREED)
                 
                 metapop(n).genes(s).phenotypes = BREED + Env_effect ;
                 
                 max_phenotype = floor(max(META.List_Topt)-REEF(n).Topt_baseline);
                 
                 metapop(n).genes(s).phenotypes(metapop(n).genes(s).phenotypes > max_phenotype) = max_phenotype ;
-            
+                
                 All_Topts = round(10*(REEF(n).Topt_baseline + metapop(n).genes(s).phenotypes))/10 ;
-                    
+                
                 [count_Topt, ~] = hist(All_Topts,Topt_bins) ;
                 RESULT.Topt_distri(n,t+1,s,:) = count_Topt;
                 RESULT.Topt_mean(n,t+1,s) = mean(All_Topts);
@@ -393,17 +394,17 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
             % Number of larvae produced by the reef (per 400m2 of reef)
             [RESULT.coral_total_fecundity(n,t+1,s), fec_Pcol, inds_gravid] = f_estimate_fecundity(metapop(n).coral(s).cover_cm2(find_colonies), F_list,...
                 CORAL.fecund_min_size(s), CORAL.fecund_a(s), CORAL.fecund_b(s));
-           
-
+            
+            
             if META.doing_DHWbleaching == 1 && META.doing_DHWadaptation == 1
                 
                 % Create a representative pool of larval heat tolerances
                 % produced by the reef. In practice this is the HT pool of
                 % the corals eggs, based on fecundity and pure inheritance
                 % from the parent coral (maternal to the egg). It is fit
-                % using a normal distribution. 
+                % using a normal distribution.
                 % This will then be adjusted for heritability later.
-                HT_adult_g = metapop(n).coral(s).heat_tolerance(find_colonies(inds_gravid)); % first subset only the gravid colonies HTs, 
+                HT_adult_g = metapop(n).coral(s).heat_tolerance(find_colonies(inds_gravid)); % first subset only the gravid colonies HTs,
                 rep_fec = ceil(50*fec_Pcol/max(fec_Pcol)); % representative fecundity of each colony
                 HT_larv = repelem(HT_adult_g, rep_fec); % then repeat the HTs of each colony by the fecundity
                 REEF(n).coral(s).HT_pool_OUT.N(t+1)=RESULT.coral_total_fecundity(n,t+1,s); % Number of larvae produced
@@ -418,31 +419,31 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
                 % representative sample of the larval pool: rep_fec
                 REEF(n).coral(s).HT_pool_OUT.negloglik_stdN(t+1) = ...
                     sum(repelem(-log(pdf('Normal',HT_adult_g, ...
-                                         REEF(n).coral(s).HT_pool_OUT.mu(t+1), ...
-                                         REEF(n).coral(s).HT_pool_OUT.sd(t+1))), ...
+                    REEF(n).coral(s).HT_pool_OUT.mu(t+1), ...
+                    REEF(n).coral(s).HT_pool_OUT.sd(t+1))), ...
                     rep_fec))/sum(rep_fec); % Bree's help to compute negll as the fitdist function fits it
                 % negloglik_stdN = sum(-log(pdf('Normal',HT_larv,fit.mu,fit.sd)))/fit.N; % computation from larval pool
-
+                
                 % Can also record skewness and kurtosis of the larval
                 % distributions, but it takes a lot more computational effort
-%                 RESULT.HT_pool_OUT.skew(n,t+1,s)=full(skewness(HT_larv));
-%                 RESULT.HT_pool_OUT.kurt(n,t+1,s)=full(kurtosis(HT_larv));
-
-
-%                 % I dont think I need this 
-%                 % Update the pool of HTs coming in = due to retention
-%                 % Note this pool will be updated at the next step with larvae coming from other reefs
-%                 REEF(n).coral(s).HT_pool_IN = REEF(n).coral(s).HT_pool_OUT ;
+                %                 RESULT.HT_pool_OUT.skew(n,t+1,s)=full(skewness(HT_larv));
+                %                 RESULT.HT_pool_OUT.kurt(n,t+1,s)=full(kurtosis(HT_larv));
+                
+                
+                %                 % I dont think I need this
+                %                 % Update the pool of HTs coming in = due to retention
+                %                 % Note this pool will be updated at the next step with larvae coming from other reefs
+                %                 REEF(n).coral(s).HT_pool_IN = REEF(n).coral(s).HT_pool_OUT ;
                 
             end
-
+            
             
             
             if META.doing_genetics == 1
                 
                 % List the potential parents
                 list_coral_ID = metapop(n).genes(s).list_coral_ID ;
-                  
+                
                 % Genotype of parents
                 QTLs = metapop(n).genes(s).QTLs ;
                 
@@ -473,9 +474,9 @@ for n = 1:META.nb_reefs % This must be done for every reef before time simulatio
                 % Note this pool will be updated at the next step with larvae coming from other reefs
                 REEF(n).coral(s).QTL_pool_IN = REEF(n).coral(s).QTL_pool_OUT ;
                 
-            end            
+            end
         end
-    end   
+    end
 end
 
 META.genetics.QTL_pool =[]; %don't need this anymore
@@ -494,27 +495,27 @@ if META.randomize_WQ_chronology == 1
     % Randomize the pick-up of WQ and connectivity layers
     RECORD.WQ_chronology = randi(6,1,META.nb_time_steps);
 else
-% OLD HINDCAST:
-%     WQ_chronology_tmp = repmat([6 6 7 7 8 8 1 1 2 2 3 3 4 4 5 5 6 6],1,META.nb_time_steps); % too long but doesn't matter here
-% NEW FOR HINDCAST & FORECAST:
-% Cycle the 2011-2018 water years twice but with 2011 (extreme wet year) applied once, then repeat in the future. This ensures that
-% the extreme wet season is applied once every 15 years (2011, 2026, 2041, ...) to match historical outbreak patterns (Pratchett et al. 2014)
+    % OLD HINDCAST:
+    %     WQ_chronology_tmp = repmat([6 6 7 7 8 8 1 1 2 2 3 3 4 4 5 5 6 6],1,META.nb_time_steps); % too long but doesn't matter here
+    % NEW FOR HINDCAST & FORECAST:
+    % Cycle the 2011-2018 water years twice but with 2011 (extreme wet year) applied once, then repeat in the future. This ensures that
+    % the extreme wet season is applied once every 15 years (2011, 2026, 2041, ...) to match historical outbreak patterns (Pratchett et al. 2014)
     WQ_chronology_tmp = repmat([6 6 7 7 8 8 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 2 2 3 3 4 4 5 5],1,20); % too long but doesn't matter here
-
-    RECORD.WQ_chronology = WQ_chronology_tmp(1:META.nb_time_steps);   
+    
+    RECORD.WQ_chronology = WQ_chronology_tmp(1:META.nb_time_steps);
 end
 
 
 for t = 1:META.nb_time_steps
     select_layer = RECORD.WQ_chronology(t) ;
-
+    
     season = iseven(t); % 1 is winter, 0 is summer (first time step is summer)
-
+    
     if season == 0 % reproductive season is summer
         
         %% %%%%%%% ESTIMATE CORAL LARVAL SUPPLY FOR EVERY REEF %%%%%%%%%%%%%%%%%
         output_larvae = squeeze(RESULT.coral_total_fecundity(:,t,:).*META.area_habitat); %larvae produced per 400m2 'scaled up' to reef area
-        % Formally this should be multiplied by 2500 but simplified to avoid carrying on large numbers (would be divided by 2500 afterwards any way) 
+        % Formally this should be multiplied by 2500 but simplified to avoid carrying on large numbers (would be divided by 2500 afterwards any way)
         
         if META.doing_water_quality == 1
             % Suspended sediments reduce fertilization and the number of competent larvae
@@ -526,8 +527,8 @@ for t = 1:META.nb_time_steps
             % Only one matrix for all species
             % select_layer gets the year (2010, 11, 12, 13, 14, 15, 16, 17)
             rand_month = round(rand(1))+1;% Randomise March (1) or April (2)
-            conn_layer = select_layer*2 -2 + rand_month; 
-            coral_conn_matrix = CONNECT(conn_layer).ACROPORA; 
+            conn_layer = select_layer*2 -2 + rand_month;
+            coral_conn_matrix = CONNECT(conn_layer).ACROPORA;
             
             % If only a subset of reefs is simulated, need to account for larvae coming from surrounding reefs
             if isempty(META.outside_reef_ID)==0
@@ -542,9 +543,9 @@ for t = 1:META.nb_time_steps
             if META.nb_reefs>1
                 
                 % This is the number of larvae supplied per species per unit reef area (400m2)
-                RESULT.coral_larval_supply(:,t,:) = (((output_larvae')*coral_conn_matrix)' + BOUNDARY_CONNECTIVITY)./META.area_habitat ;              
-            else     
-                RESULT.coral_larval_supply(:,t,:) = ((output_larvae*coral_conn_matrix)' + BOUNDARY_CONNECTIVITY)./META.area_habitat ;             
+                RESULT.coral_larval_supply(:,t,:) = (((output_larvae')*coral_conn_matrix)' + BOUNDARY_CONNECTIVITY)./META.area_habitat ;
+            else
+                RESULT.coral_larval_supply(:,t,:) = ((output_larvae*coral_conn_matrix)' + BOUNDARY_CONNECTIVITY)./META.area_habitat ;
             end
             
         else
@@ -554,38 +555,38 @@ for t = 1:META.nb_time_steps
         end
         
         %% Restoration: larval enrichment
-%         %% INACTIVATED FOR NOW (MARCH 2022): moving larvae simulated as a deployment of coral outplants (1 yr old)
-%         if META.doing_restoration == 1
-%             
-%             if META.nb_reefs_enriched > 0
-%                 
-%                 if META.doing_larval_enrichment(t)==1
-%                     
-%                     All_reef_states = squeeze(sum(RESULT.coral_pct2D(:,t,:),3));
-%                     
-%                     Priority_reef_ID = META.priority_list_LarvalEnrich;
-%                     
-%                     % Exclude from priority list those reefs with large amount of corals (no need to enrich larval supply)
-%                     Priority_reef_ID(All_reef_states(META.priority_list_LarvalEnrich)>META.threshold_for_larval_enrichment)=[];
-%                     
-%                     if isempty(Priority_reef_ID)==0
-%          
-%                         nb_restored_reefs = META.nb_reefs_enriched ;
-%                         nb_restored_reefs(nb_restored_reefs>length(Priority_reef_ID)) = length(Priority_reef_ID);
-%                         
-%                         extra_larvae = META.enriched_larvae(ones(1,nb_restored_reefs),:);
-%                         X=reshape(extra_larvae,size(extra_larvae,1),1,size(extra_larvae,2));
-%                         
-%                         RESULT.coral_larval_supply(Priority_reef_ID(1:nb_restored_reefs),t,:) = ...
-%                             RESULT.coral_larval_supply(Priority_reef_ID(1:nb_restored_reefs),t,:) + X ;
-%                         
-%                         RECORD.enriched_reefs(Priority_reef_ID(1:nb_restored_reefs),t)=1;
-%                         
-%                     end
-%                 end
-%             end
-%         end
-            
+        %         %% INACTIVATED FOR NOW (MARCH 2022): moving larvae simulated as a deployment of coral outplants (1 yr old)
+        %         if META.doing_restoration == 1
+        %
+        %             if META.nb_reefs_enriched > 0
+        %
+        %                 if META.doing_larval_enrichment(t)==1
+        %
+        %                     All_reef_states = squeeze(sum(RESULT.coral_pct2D(:,t,:),3));
+        %
+        %                     Priority_reef_ID = META.priority_list_LarvalEnrich;
+        %
+        %                     % Exclude from priority list those reefs with large amount of corals (no need to enrich larval supply)
+        %                     Priority_reef_ID(All_reef_states(META.priority_list_LarvalEnrich)>META.threshold_for_larval_enrichment)=[];
+        %
+        %                     if isempty(Priority_reef_ID)==0
+        %
+        %                         nb_restored_reefs = META.nb_reefs_enriched ;
+        %                         nb_restored_reefs(nb_restored_reefs>length(Priority_reef_ID)) = length(Priority_reef_ID);
+        %
+        %                         extra_larvae = META.enriched_larvae(ones(1,nb_restored_reefs),:);
+        %                         X=reshape(extra_larvae,size(extra_larvae,1),1,size(extra_larvae,2));
+        %
+        %                         RESULT.coral_larval_supply(Priority_reef_ID(1:nb_restored_reefs),t,:) = ...
+        %                             RESULT.coral_larval_supply(Priority_reef_ID(1:nb_restored_reefs),t,:) + X ;
+        %
+        %                         RECORD.enriched_reefs(Priority_reef_ID(1:nb_restored_reefs),t)=1;
+        %
+        %                     end
+        %                 end
+        %             end
+        %         end
+        
         
         %% %%%%%%% ESTIMATE COTS LARVAL SUPPLY %%%%%%%%%%%%%%%%%
         if META.doing_COTS == 1
@@ -607,25 +608,25 @@ for t = 1:META.nb_time_steps
             else
                 % Self recruitment with fixed regime of COTS immigration (= no connectivity)
                 RESULT.COTS_larval_supply(:,t) = (META.COTS_min_selfseed*RESULT.COTS_larval_output(:,t)./META.area_habitat) + META.COTS_immigration(1,t);
-            end            
+            end
         end
     end
     
     %% %%%%%%% PROCESS EVERY REEF ONE AFTER THE OTHER  %%%%%%%%%%%%%%%%%%%%%
-%     seed = rng;
-% tic
+    %     seed = rng;
+    % tic
     % t
-    for n = 1:META.nb_reefs % This must be done for every reef before time simulations    
+    for n = 1:META.nb_reefs % This must be done for every reef before time simulations
         % n
         %%%% --------------------------------------------------------------
         %%%% Water quality
         %%%% --------------------------------------------------------------
         if META.doing_water_quality == 1
-
+            
             REEF(n).CORAL_recruit_survival = REEF_POP(select_layer).CORAL_recruit_survival(n,1).*ones(1,META.nb_coral_types);
             REEF(n).CORAL_recruit_survival(1,4:6) = 1; % Full survival for non-Acropora groups
             REEF(n).CORAL_juvenile_growth = REEF_POP(select_layer).CORAL_juvenile_growth(n,season+1)*CORAL.juvenile_growth_rate;
-        else            
+        else
             REEF(n).CORAL_recruit_survival = ones(1,META.nb_coral_types);
             REEF(n).CORAL_juvenile_growth = CORAL.juvenile_growth_rate;
         end
@@ -654,12 +655,12 @@ for t = 1:META.nb_time_steps
                     
                     all_reefs = 1:META.nb_reefs;
                     select_sources = all_reefs(larval_origins>0); %ID of source reefs
-%                     select_sources = select_sources(select_sources~=n); %(excluding reef n)
+                    %                     select_sources = select_sources(select_sources~=n); %(excluding reef n)
                     % if a reef has only 1 colony remaining in previous
                     % timstep, then it can produce fecundity, but there
                     % will be no fertilisation and thus HT_pool_OUT = NaN
                     % to avoid assigned HT of NaN, remove these reefs from
-                    % the select_sources 
+                    % the select_sources
                     nanreef = [];
                     for nn = 1:length(select_sources) % for every source reef
                         nanreef(nn) = REEF(select_sources(nn)).coral(s).HT_pool_OUT.mu(t);
@@ -672,25 +673,16 @@ for t = 1:META.nb_time_steps
                         
                         % Update the pool of genotypes produced by reef n with a random selection comming
                         % from the source reefs (they replace the existing ones
-%                         if t == 3 && n == 1; warning("STOP"); end
+                        %                         if t == 3 && n == 1; warning("STOP"); end
                         
                         for nn = 1:length(select_sources) % for every source reef
                             
                             
                             Nb_larvae = larval_origins(select_sources(nn)); % nb of larvae to create for this source reef
-                           
-%                             REEF(n).coral(s).HT_pool_IN(c:(c+Nb_larvae-1),t) = ...
-%                                 normrnd(REEF(select_sources(nn)).coral(s).HT_pool_OUT.mu(t), ...
-%                                         REEF(select_sources(nn)).coral(s).HT_pool_OUT.sd(t), ...
-%                                         Nb_larvae,1);
-%                             REEF(n).coral(s).HT_pool_IN(c:(c+Nb_larvae-1),1) = ...
-%                                 normrnd(REEF(select_sources(nn)).coral(s).HT_pool_OUT.mu(t), ...
-%                                         REEF(select_sources(nn)).coral(s).HT_pool_OUT.sd(t), ...
-%                                         Nb_larvae,1);
                             REEF(n).coral(s).HT_pool_IN(c:(c+Nb_larvae-1),1) = ...
                                 normrnd(REEF(select_sources(nn)).coral(s).HT_pool_OUT.mu(t), ...
-                                        CORAL.DHWbleaching_mortality_Intercept_sd, ...
-                                        Nb_larvae,1);
+                                CORAL.DHWbleaching_mortality_Intercept_sd, ...
+                                Nb_larvae,1);
                             c = c + Nb_larvae;
                         end
                     end
@@ -760,9 +752,9 @@ for t = 1:META.nb_time_steps
         %%%%%%%%% EFFECTS OF RUBBLE ON CORAL JUVENILES
         if META.tracking_rubble==1
             % Elevate juvenile mortality with the amount of rubble present (RRAP feasibility study)
-%             REEF(n).juv_whole_mortality_rate = CORAL.juv_whole_mortality_rate + ...
-%                 (1-CORAL.juv_whole_mortality_rate) * RESULT.rubble_cover_pct2D(n,t)/100 ;        
-
+            %             REEF(n).juv_whole_mortality_rate = CORAL.juv_whole_mortality_rate + ...
+            %                 (1-CORAL.juv_whole_mortality_rate) * RESULT.rubble_cover_pct2D(n,t)/100 ;
+            
             REEF(n).CORAL_recruit_survival = REEF(n).CORAL_recruit_survival*(1-RESULT.rubble_cover_pct2D(n,t)/100) ;
         end
         
@@ -771,12 +763,12 @@ for t = 1:META.nb_time_steps
         algal_removal = (REEF(n).diadema).*ALGAL.diadema_props + (REEF(n).herbivory(1,t)).*ALGAL.herbivory_props(:,t);
         
         % Calculate difference between current SST and the Topt baseline of coral's phenotype for that reef
-        SST_diff = REEF(n).predicted_SST(t)-REEF(n).Topt_baseline ; 
-%         seed=rng;
+        SST_diff = REEF(n).predicted_SST(t)-REEF(n).Topt_baseline ;
+        %         seed=rng;
         [metapop(n).coral, metapop(n).algal, metapop(n).genes, last_surface_area_grazed] = ...
             f_process_population (metapop(n).coral, metapop(n).algal, metapop(n).genes, season, algal_removal, META, REEF(n), CORAL, ALGAL, SST_diff);
-% rng(seed);
-
+        % rng(seed);
+        
         %%%% --------------------------------------------------------------
         %%%% CROWN-OF-THORN STARFISH PREDATION
         %%%% --------------------------------------------------------------
@@ -793,7 +785,7 @@ for t = 1:META.nb_time_steps
             % First tests if at the start of time step t the density of 18+
             % months COTS is above threshold for disease (ie, above outbreak threshold)
             if RESULT.COTS_adult_densities(n,t) >= META.COTS_density_threshold_for_disease
-                    
+                
                 % If that the case, track recent history of that density
                 if length(META.COTS_outbreak_duration)>1
                     COTS_outbreak_duration = randi(META.COTS_outbreak_duration); % in years
@@ -804,7 +796,7 @@ for t = 1:META.nb_time_steps
                 % Process die-back if outbreak has lasted the max duration
                 if t > 2*COTS_outbreak_duration+1
                     
-%                     COTS_density_history = sum(RESULT.COTS_all_densities(n,(t-COTS_outbreak_duration*2):t,3:end),3);
+                    %                     COTS_density_history = sum(RESULT.COTS_all_densities(n,(t-COTS_outbreak_duration*2):t,3:end),3);
                     COTS_density_history = RESULT.COTS_adult_densities(n,(t-COTS_outbreak_duration*2):t);
                     
                     if min(COTS_density_history)>= META.COTS_density_threshold_for_disease
@@ -816,10 +808,10 @@ for t = 1:META.nb_time_steps
                     end
                 end
             end
-                         
+            
             % If forcing of CoTS density is available, then erase the predicted pop
-%             if t > 1 && REEF_COTS.densities_M(n,t) > -1 % if empirical estimate available (otherwise do nothing)
-%                 %(starts at t=2 to not override initial conditions)
+            %             if t > 1 && REEF_COTS.densities_M(n,t) > -1 % if empirical estimate available (otherwise do nothing)
+            %                 %(starts at t=2 to not override initial conditions)
             if t> 1 && isnan(REEF_COTS.densities_M(n,t))==0  % if empirical observation is available (otherwise do nothing)
                 %(starts at t=2 to not override initial conditions)
                 
@@ -835,7 +827,7 @@ for t = 1:META.nb_time_steps
                 
                 % Note: we populate at t because this is CoTS population before the processing of mortality
             end
-                 
+            
             
             % Add COTS recruits before processing CoTS pop dyn
             if season == 0 % Only recruit in summer
@@ -847,10 +839,10 @@ for t = 1:META.nb_time_steps
             
             % Then process COTS dynamics (mortality) and predation
             COTS_feeding_rates = META.COTS_feeding_rates(season+1,:); % current feeding rates (seasonal)
-                           
+            
             [metapop(n).coral, metapop(n).algal, NEW_COTS_densities ,total_coral_loss_COTS] = f_apply_COTS_predation(metapop(n).coral, metapop(n).algal,...
                 RESULT.COTS_all_densities(n,t,:), RESULT.COTS_settler_densities(n,t), COTS_feeding_rates, CORAL.SI, REEF(n).COTS_background_density, META) ;
-                       
+            
             mature_COTS_density = sum(NEW_COTS_densities(1,META.COTS_fecundity~=0),2) ;
             
             % Fertilization success (0-1) from number of mature CoTS per hectare (Babcock et al. 2014)
@@ -875,67 +867,31 @@ for t = 1:META.nb_time_steps
             
             if RECORD.hurricane_events(n,t)>0
                 
-%                 seed = rng;
-
+                %                 seed = rng;
+                
                 % Estimate hurricane impact with the specified category (includes category 0 = no hurricane -> no effect
                 [metapop(n).coral, metapop(n).algal, total_coral_loss_cyclones] = f_hurricane_effect...
                     (metapop(n).coral, metapop(n).algal, RECORD.hurricane_events(n,t), RECORD.hurricane_parm_k(n,t), META, CORAL) ;
                 
                 RECORD.coral_pct2D_lost_cyclones(n,t,:) = 100*total_coral_loss_cyclones/sum(REEF(n).substrate_SA_cm2); %now per species
-% rng(seed)
-            end          
+                % rng(seed)
+            end
         end
         
         %%%% --------------------------------------------------------------
         %%%% BLEACHING
         %%%% --------------------------------------------------------------
-%         if META.doing_bleaching == 1 && META.doing_DHWbleaching == 0 && season == 0
-%             
-%             if REEF(n).predicted_DHWs(t)>= META.DHW_threshold && RECORD.hurricane_events(n,t) == 0 % only bleach if no hurricane
-%                             
-%                 [metapop(n).coral, metapop(n).genes, metapop(n).algal, total_coral_loss_bleaching, total_mortality_bleaching] = ...
-%                     f_bleaching_new(metapop(n).coral, metapop(n).genes, metapop(n).algal, bleaching_mortalities(n,t),...
-%                     CORAL, META.doing_3D, META.nb_coral_types, META.doing_clades, META.doing_DHWbleaching, META.doing_genetics, ...
-%                     META.bleaching_whole_offset, META.bleaching_partial_offset,REEF(n).Topt_baseline, META.Topt2index);
-%                 
-%                 
-%                 RECORD.applied_DHWs(n,t) = REEF(n).predicted_DHWs(1,t);
-%                 RECORD.applied_bleaching_mortality(n,t) = bleaching_mortalities(n,t); % record the bleaching mortality effectively applied
-%                 RECORD.coral_pct2D_lost_bleaching(n,t,:) = 100*total_coral_loss_bleaching/sum(REEF(n).substrate_SA_cm2);
-%             end
-%         end
         
         if META.doing_bleaching == 1 && season == 0
-%         if META.doing_bleaching == 1 && season == 0
+            %         if META.doing_bleaching == 1 && season == 0
             
             if RECORD.hurricane_events(n,t) == 0 % only bleach if no hurricane
-                             
-                if META.doing_DHWadaptation_covZw == 0
-                    % this function works across all species
-%                     tic
-%                     [c1, g1, a1, tcl1, tmb1] = ...
-                    [metapop(n).coral, metapop(n).genes, metapop(n).algal, total_coral_loss_bleaching, total_mortality_bleaching] = ...
-                        f_bleaching_Liam(metapop(n).coral, metapop(n).genes, metapop(n).algal, bleaching_mortalities(n,t), REEF(n).predicted_DHWs(t), ...
-                        CORAL, META.doing_3D, META.nb_coral_types, META.doing_clades, META.doing_DHWbleaching, META.doing_DHWadaptation_covZw, META.doing_coral_age, META.doing_genetics,  ...
-                        META.bleaching_whole_offset, META.bleaching_partial_offset,REEF(n).Topt_baseline, META.Topt2index);
-%                     tcl1
-%                     toc
-                elseif META.doing_DHWadaptation_covZw == 1
-                    % Make a new function that loops by species!
-                    % f_bleaching_Liam_adp_covZw()
-%                     if t == 59 && n == 68; warning("STOP"); end
-                    [metapop(n).coral, metapop(n).algal, total_coral_loss_bleaching, total_mortality_bleaching, cov_z_w, Zp_mu] = ...
-                        f_bleaching_Liam_adp_covZw(metapop(n).coral, metapop(n).algal, bleaching_mortalities(n,t), REEF(n).predicted_DHWs(t), ...
-                        CORAL, META.doing_3D, META.nb_coral_types, META.doing_clades, META.doing_DHWbleaching, META.doing_DHWadaptation_covZw, META.doing_coral_age, ...
-                        META.bleaching_whole_offset);
-%                     toc
-%                     if n==1; fprintf(strcat("t=",string(t),",")); end
-%                     strcat(string(n),",")
-                    for s = 1:META.nb_coral_types
-                        REEF(n).coral(s).Zp_mu(t+1) = Zp_mu(s);
-                    end
-                end
                 
+                % this function works across all species
+                [metapop(n).coral, metapop(n).genes, metapop(n).algal, total_coral_loss_bleaching, total_mortality_bleaching] = ...
+                    f_bleaching(metapop(n).coral, metapop(n).genes, metapop(n).algal, bleaching_mortalities(n,t), REEF(n).predicted_DHWs(t), ...
+                    CORAL, META.doing_3D, META.nb_coral_types, META.doing_clades, META.doing_DHWbleaching, META.doing_coral_age, META.doing_genetics,  ...
+                    META.bleaching_whole_offset, META.bleaching_partial_offset,REEF(n).Topt_baseline, META.Topt2index);
                 
                 RECORD.applied_DHWs(n,t) = REEF(n).predicted_DHWs(1,t);
                 RECORD.applied_bleaching_mortality(n,t) = bleaching_mortalities(n,t); % record the bleaching mortality effectively applied
@@ -946,7 +902,7 @@ for t = 1:META.nb_time_steps
         %%%% --------------------------------------------------------------
         %%%% CORAL AGEING
         %%%% --------------------------------------------------------------
-        % Add 0.5 years onto each living corals age (6 months)        
+        % Add 0.5 years onto each living corals age (6 months)
         if META.doing_coral_age
             for s = 1:META.nb_coral_types
                 metapop(n).coral(s).coral_age(metapop(n).coral(s).cover_cm2 > 0) = ...
@@ -967,30 +923,30 @@ for t = 1:META.nb_time_steps
                     META.convert_rubble * sum(RECORD.coral_pct2D_lost_cyclones(n,t,:),3);
             end
             
-            if t>META.convert_rubble_lag && sum(RECORD.coral_pct2D_lost_bleaching(n,t-META.convert_rubble_lag,:),3) >0 % Assuming structural collapse after 3 years 
+            if t>META.convert_rubble_lag && sum(RECORD.coral_pct2D_lost_bleaching(n,t-META.convert_rubble_lag,:),3) >0 % Assuming structural collapse after 3 years
                 RESULT.rubble_cover_pct2D(n,t+1) = RESULT.rubble_cover_pct2D(n,t+1) + ...
                     META.convert_rubble * sum(RECORD.coral_pct2D_lost_bleaching(n,t-META.convert_rubble_lag,:),3);
-            end 
-                                    
-            if t>META.convert_rubble_lag && sum(RECORD.coral_pct2D_lost_COTS(n,t-META.convert_rubble_lag,:),3) >0 % Assuming structural collapse after 3 years 
+            end
+            
+            if t>META.convert_rubble_lag && sum(RECORD.coral_pct2D_lost_COTS(n,t-META.convert_rubble_lag,:),3) >0 % Assuming structural collapse after 3 years
                 RESULT.rubble_cover_pct2D(n,t+1) = RESULT.rubble_cover_pct2D(n,t+1) + ...
                     META.convert_rubble * sum(RECORD.coral_pct2D_lost_COTS(n,t-META.convert_rubble_lag,:),3);
-            end  
+            end
         end
         
         %%%% --------------------------------------------------------------
         %%%% CORAL RECRUITMENT
-        %%%% --------------------------------------------------------------        
+        %%%% --------------------------------------------------------------
         % Recruitment of 6 month old corals, ie, the settlers that passed
-        % the bottleneck of posettlement mortality through the whole summer time step       
+        % the bottleneck of posettlement mortality through the whole summer time step
         
         if season == 0 % Only recruit in summer
-                      
+            
             if META.recruitment_type == 1
                 % Max density of settlers is density dependent and given by Beverton-Holt function of available coral larvae per unit reef area (400m2)
-%                 max_density_settlers = REEF(n).CORAL_recruit_survival .* CORAL.BH_alpha.*(squeeze(RESULT.coral_larval_supply(n,t,:))'./(CORAL.BH_beta + squeeze(RESULT.coral_larval_supply(n,t,:))'));    
-                max_density_settlers = REEF(n).CORAL_recruit_survival' .* CORAL.BH_alpha.*(squeeze(RESULT.coral_larval_supply(n,t,:))./(CORAL.BH_beta + squeeze(RESULT.coral_larval_supply(n,t,:))));               
-            
+                %                 max_density_settlers = REEF(n).CORAL_recruit_survival .* CORAL.BH_alpha.*(squeeze(RESULT.coral_larval_supply(n,t,:))'./(CORAL.BH_beta + squeeze(RESULT.coral_larval_supply(n,t,:))'));
+                max_density_settlers = REEF(n).CORAL_recruit_survival' .* CORAL.BH_alpha.*(squeeze(RESULT.coral_larval_supply(n,t,:))./(CORAL.BH_beta + squeeze(RESULT.coral_larval_supply(n,t,:))));
+                
             else
                 max_density_settlers = REEF(n).CORAL_recruit_survival' .* CORAL.BH_alpha;
             end
@@ -998,8 +954,8 @@ for t = 1:META.nb_time_steps
             
             % Apply recruitment
             
-%             if t == 3 && n == 1; warning("STOP"); end
-
+            %             if t == 3 && n == 1; warning("STOP"); end
+            
             
             ancestral_HT_pars = [];
             if META.doing_DHWbleaching == 1 && META.doing_DHWadaptation == 0
@@ -1012,8 +968,8 @@ for t = 1:META.nb_time_steps
             [metapop(n).coral, metapop(n).genes, total_settled, ID_colony_tracking(n,:), metapop(n).algal] = f_apply_recruitment(metapop(n).coral, metapop(n).algal,...
                 metapop(n).genes, META, REEF(n), max_density_settlers, CORAL.clade_prop, ID_colony_tracking(n,:), ancestral_HT_pars, CORAL.DHWbleaching_mortality_Intercept_super_tolerant, n);
             
-%             if full(sum(isnan(metapop(n).coral.heat_tolerance),'all')) > 0; warning("STOP"); end
-
+            %             if full(sum(isnan(metapop(n).coral.heat_tolerance),'all')) > 0; warning("STOP"); end
+            
             
             RESULT.coral_settler_count(n,t+1,:) = total_settled ; % record the number of settlers before they are processed
             
@@ -1063,10 +1019,10 @@ for t = 1:META.nb_time_steps
                     never_deployed(n,1)=0; % so that restored cells are now fixed for the rest of the simulation
                 end
             end
-      
-            %Need to re-arrange coral matrix in case if wasn't previously done (depends on t) 
+            
+            %Need to re-arrange coral matrix in case if wasn't previously done (depends on t)
             [metapop(n).coral, metapop(n).genes] = f_struct_arrange(metapop(n).coral, metapop(n).genes, META);
-
+            
             %% CORAL OUTPLANTING
             if RECORD.outplanted_reefs(n,t)==1
                 
@@ -1097,7 +1053,7 @@ for t = 1:META.nb_time_steps
                 else
                     Density_to_enrich = META.enriched_species_prop .* META.enriched_density;
                 end
-                                
+                
                 seed=rng;
                 
                 [metapop(n).coral, metapop(n).algal, metapop(n).genes, ID_colony_tracking(n,:), RECORD.total_enriched(n,t,:)] = ...
@@ -1153,7 +1109,7 @@ for t = 1:META.nb_time_steps
                     F_list = ones(size(D));
                     F_list(D>0) = normpdf(D(D>0),0,META.genetics.SIGMA_HOT(s))/normpdf(0,0,META.genetics.SIGMA_HOT(s));
                     F_list(D<0) = normpdf(D(D<0),0,META.genetics.SIGMA_COLD(s))/normpdf(0,0,META.genetics.SIGMA_COLD(s));
-                     
+                    
                     RESULT.relative_fitness(n,t+1,s) = mean(F_list);
                     
                     All_Topts = round(10*(REEF(n).Topt_baseline + metapop(n).genes(s).phenotypes))/10 ;
@@ -1169,7 +1125,7 @@ for t = 1:META.nb_time_steps
                     
                     select1 = randsample(1:length(list_new), META.genetics_pop_size, 'true', F_list')'; % pick up parent 1 for each larva
                     select2 = randsample(1:length(list_new), META.genetics_pop_size, 'true', F_list')'; % pick up parent 2 for each larva (note this does not avoid selfing)
-
+                    
                     % Look for hermaphrodites
                     test_self =  select1 - select2;
                     select2(test_self==0) = randi(length(list_new), length(test_self(test_self==0)),1);
@@ -1219,160 +1175,45 @@ for t = 1:META.nb_time_steps
                     % using a normal distribution.
                     
                     % narrow-sense heritability is applied at this stage.
-                    if META.doing_DHWadaptation_VA == 1
-                    
-                    % For doing adaptation using separation of additive
-                        % genetic and environmental components based on
-                        % heritability.
-                        
-                        HT_adult_g = metapop(n).coral(s).heat_tolerance(find_colonies(inds_gravid)); % first subset only the gravid colonies HTs,
-                        rep_fec = ceil(50*fec_Pcol/max(fec_Pcol)); % representative fecundity of each colony
-                        REEF(n).coral(s).HT_pool_OUT.N(t+1)=RESULT.coral_total_fecundity(n,t+1,s); % Number of larvae produced
-                        [HT_larv_mu, HT_larv_sd] = f_additive_genetic_trait_inheritance_fast( ...
-                            HT_adult_g, rep_fec, CORAL.DHWbleaching_mortality_h2);
-                        if META.doing_DHWbleaching_TaxaSensivities == 1
-                            if META.doing_DHWadaptation_Zp == 1 % ancestral
-                                dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av*CORAL.DHWsensitivity_bleaching(s);
-                            elseif META.doing_DHWadaptation_Zp == 2 % 1 mean generation time ago (10 years)
-                                % STILL needs work
-                            end
-                        else
-                            if META.doing_DHWadaptation_Zp == 1 % ancestral
-                                dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av;
-                            elseif META.doing_DHWadaptation_Zp == 2 % 1 mean generation time ago (10 years)
-                                % STILL needs work                            
-                            end
+                    % This will then be adjusted for heritability later.
+                    HT_adult_g = metapop(n).coral(s).heat_tolerance(find_colonies(inds_gravid)); % first subset only the gravid colonies HTs,
+                    rep_fec = ceil(50*fec_Pcol/max(fec_Pcol)); % representative fecundity of each colony
+                    HT_larv = repelem(HT_adult_g, rep_fec); % then repeat the HTs of each colony by the fecundity
+                    REEF(n).coral(s).HT_pool_OUT.N(t+1)=RESULT.coral_total_fecundity(n,t+1,s); % Number of larvae produced
+                    HT_larv_mu = full(mean(HT_larv)); % average HT of larval pool
+                    % Implement Heritability by shifting the mean HT of the
+                    % larval pool back toward the ancestral distribution
+                    % mean by a proportion = h2
+                    if META.doing_DHWbleaching_TaxaSensivities == 1
+                        if META.doing_DHWadaptation_Zp == 1 % ancestral
+                            dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av*CORAL.DHWsensitivity_bleaching(s);
                         end
-                        REEF(n).coral(s).HT_pool_OUT.mu(t+1) = HT_larv_mu - (1 - CORAL.DHWbleaching_mortality_h2) * dif;
-                        REEF(n).coral(s).HT_pool_OUT.sd(t+1)=HT_larv_sd; % HT SD of larval pool
-                        %                         REEF(n).coral(s).HT_pool_OUT.sd(t+1)=CORAL.DHWbleaching_mortality_Intercept_sd; % ancstral HT SD
-                    
-                    elseif META.doing_DHWadaptation_covZw == 1
-                        % for the Price Equation approach to estimating
-                        % natural selection based on the covariance of z on relative fitness (rw) 
-                        % tolerance of larval plume = Zp_mu + R, where
-                        %   Zp_mu = fecundity weighted HT of gravid colonies before selection
-                        %   R = generational response to selection
-                        % R = h2 * cov(z,w) / g
-                        
-                        REEF(n).coral(s).HT_pool_OUT.N(t+1)=RESULT.coral_total_fecundity(n,t+1,s); % Number of larvae produced
-%                         REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
-%                             Zp_mu(s) + CORAL.DHWbleaching_mortality_h2 * cov_z_w(s) / CORAL.generation_length;
-                        REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
-                            CORAL.DHWbleaching_mortality_Intercept_av + CORAL.DHWbleaching_mortality_h2 * cov_z_w(s) / CORAL.generation_length;
-%                         if t == 16 && n == 1; warning("STOP"); end
-%                         if t <= 16 % for first 5 years (10 timesteps) use the ancestral distribution
-%                             REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
-%                                 REEF(n).coral(s).Zp_mu(1) + CORAL.DHWbleaching_mortality_h2 * cov_z_w(s) / CORAL.generation_length;
-%                         else
-%                             REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
-%                                 REEF(n).coral(s).Zp_mu(t-14) + CORAL.DHWbleaching_mortality_h2 * cov_z_w(s) / CORAL.generation_length;
-%                         end
-
-                        REEF(n).coral(s).HT_pool_OUT.sd(t+1)=NaN; % HT SD of larval pool
-                        REEF(n).coral(s).HT_pool_OUT.negloglik_stdN(t+1) = NaN;
                     else
-
-                        % This will then be adjusted for heritability later.
-                        HT_adult_g = metapop(n).coral(s).heat_tolerance(find_colonies(inds_gravid)); % first subset only the gravid colonies HTs,
-                        rep_fec = ceil(50*fec_Pcol/max(fec_Pcol)); % representative fecundity of each colony
-                        HT_larv = repelem(HT_adult_g, rep_fec); % then repeat the HTs of each colony by the fecundity
-                        REEF(n).coral(s).HT_pool_OUT.N(t+1)=RESULT.coral_total_fecundity(n,t+1,s); % Number of larvae produced
-                        HT_larv_mu = full(mean(HT_larv)); % average HT of larval pool
-                        % Implement Heritability by shifting the mean HT of the
-                        % larval pool back toward the ancestral distribution
-                        % mean by a proportion = h2
-                        if META.doing_DHWbleaching_TaxaSensivities == 1
-                            if META.doing_DHWadaptation_Zp == 1 % ancestral
-                                dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av*CORAL.DHWsensitivity_bleaching(s);
-                            elseif META.doing_DHWadaptation_Zp == 2 % one mean generation length ago (10 years)
-                                % STILL needs work                            
-                            end
-                        else
-                            if META.doing_DHWadaptation_Zp == 1 % ancestral
-                                dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av;
-                                
-                            elseif META.doing_DHWadaptation_Zp == 2 % one mean generation time ago (10 years)
-                                % heat tolerance of the previous generation, i.e., when the mean adult in the new selected population was born
-                                if t <= 10 % for first 5 years (10 timesteps) use the ancestral distribution
-                                    HTmean_prev_gen = CORAL.DHWbleaching_mortality_Intercept_av;
-                                else % after that use the mean HT from 10 years ago
-                                    % population mean HT for Palau is the weighted mean of all individual reef means
-                                    % HTmean at each reef
-%                                     reefmeans=RESULT.heat_tolerances_mu(:,t-10,s);
-                                    % population at each reef
-                                    reefpops=sum(RESULT.coral_juv_count(:,t-10,s),3) + ...
-                                             sum(RESULT.coral_adol_count(:,t-10,s),3) + ...
-                                             sum(RESULT.coral_adult_count(:,t-10,s),3);
-                                    % weighting - the proportion of overall population at each reef
-%                                     reefprops=reefpops/sum(reefpops);
-%                                     HTmean_prev_gen = sum(reefmeans .* reefprops);
-                                    % faster way here of above code here:
-                                    HTmean_prev_gen = ...
-                                        sum(RESULT.heat_tolerances_mu(:,t-10,s) .* ...
-                                        (reefpops/sum(reefpops)));                                    
-                                end
-                                % RESULT.heat_tolerances_mu = zeros(META.nb_reefs, META.nb_time_steps+1, META.nb_coral_types)
-                                dif = HT_larv_mu - HTmean_prev_gen;
-                            elseif META.doing_DHWadaptation_Zp == 3 % generations based on age of all parents, weighted by present parental occurrence
-%             RESULT.nb_fecund_colonies(n,t+1,s) = sum(metapop(n).coral(s).cover_cm2 > CORAL.fecund_min_size(s),'all');
-%             RESULT.heat_tolerances_mu_fecund_colonies(n,t+1,s) = full(mean(metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2 >= CORAL.fecund_min_size(s)),'all'));
-                                % 1) relative weights for each age subgroup based on present parental occurrence
-                                % the weights file will have age group as column
-                                parental_age_group_weight_tab=full(tabulate(metapop(n).coral(s).coral_age(metapop(n).coral(s).cover_cm2 > CORAL.fecund_min_size(s))));
-                                parental_age_group_weight = parental_age_group_weight_tab(:,3)/100;
-
-                                % 2) age range of parental colonies in terms of timesteps
-                                parental_birth_timesteps = t - 2*parental_age_group_weight_tab(:,1);
-                                parental_birth_timesteps(parental_birth_timesteps <1)=1;
-                                
-                                % 4) weighted mean of selection differentials for each subgroups
-                                dif = sum((HT_larv_mu - RESULT.pop_heat_tolerances_mu_fecund_colonies(parental_birth_timesteps,s)) .* parental_age_group_weight);
-
-                            end
+                        if META.doing_DHWadaptation_Zp == 1 % ancestral
+                            dif = HT_larv_mu - CORAL.DHWbleaching_mortality_Intercept_av;
                         end
-                        REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
-                            HT_larv_mu - (1 - CORAL.DHWbleaching_mortality_h2) * dif;
-%                         REEF(n).coral(s).HT_pool_OUT.sd(t+1)=full(std(HT_larv)); % HT SD of larval pool
-                        REEF(n).coral(s).HT_pool_OUT.sd(t+1)=CORAL.DHWbleaching_mortality_Intercept_sd; % ancstral HT SD
-                        clear HT_larv HT_larv_mu R_response_to_selection
-                        % Normal distribution fit error recorded as negative log
-                        % likelihood scaled to the number of larvae in the HT pool distribution
-                        % LogLik can be made much quicker by calculating pdfs on adult estimates
-                        % then scaling up to the larval pool afterwards, all on the
-                        % representative sample of the larval pool: rep_fec
-                        REEF(n).coral(s).HT_pool_OUT.negloglik_stdN(t+1) = ...
-                            sum(repelem(-log(pdf('Normal',HT_adult_g, ...
-                            REEF(n).coral(s).HT_pool_OUT.mu(t+1), ...
-                            REEF(n).coral(s).HT_pool_OUT.sd(t+1))), ...
-                            rep_fec))/sum(rep_fec); % Bree's help to compute negll as the fitdist function fits it
-                        % negloglik_stdN = sum(-log(pdf('Normal',HT_larv,fit.mu,fit.sd)))/fit.N; % computation from larval pool
-
                     end
-                    % Can also record skewness and kurtosis of the larval
-                    % distributions, but it takes a lot more computational effort
-                    %                     RESULT.HT_pool_OUT.skew(n,t+1,s)=full(skewness(HT_larv));
-                    %                     RESULT.HT_pool_OUT.kurt(n,t+1,s)=full(kurtosis(HT_larv));
-                    %
-                    %
-                    %                     % I dont think I need this
-                    %                     % Update the pool of HTs coming in = due to retention
-                    %                     % Note this pool will be updated at the next step with larvae coming from other reefs
-                    %                     REEF(n).coral(s).HT_pool_IN = REEF(n).coral(s).HT_pool_OUT ;
-                    
-                elseif META.doing_DHWbleaching == 1 && META.doing_DHWadaptation == 1 && length(fec_Pcol) <= 9
-                    % If there is only one or fewer corals on the reef then
+                    REEF(n).coral(s).HT_pool_OUT.mu(t+1) = ...
+                        HT_larv_mu - (1 - CORAL.DHWbleaching_mortality_h2) * dif;
+                    REEF(n).coral(s).HT_pool_OUT.sd(t+1)=CORAL.DHWbleaching_mortality_Intercept_sd; % ancstral HT SD
+                    clear HT_larv HT_larv_mu R_response_to_selection
+                    REEF(n).coral(s).HT_pool_OUT.negloglik_stdN(t+1) = ...
+                        sum(repelem(-log(pdf('Normal',HT_adult_g, ...
+                        REEF(n).coral(s).HT_pool_OUT.mu(t+1), ...
+                        REEF(n).coral(s).HT_pool_OUT.sd(t+1))), ...
+                        rep_fec))/sum(rep_fec);
+                else % number of gravid colonies is less than specified above (2)
                     % there is no chance for fertilisation of eggs.
                     % Therefore we set the number of larvae to zero
                     REEF(n).coral(s).HT_pool_OUT.N(t+1)=0; % Number of larvae produced
                     REEF(n).coral(s).HT_pool_OUT.mu(t+1)=NaN; % average HT of larval pool
                     REEF(n).coral(s).HT_pool_OUT.sd(t+1)=NaN; % HT SD of larval pool
                     REEF(n).coral(s).HT_pool_OUT.negloglik_stdN(t+1) = NaN;
-                
+                    
                 end
             end
         end
-            
+        
         %%%% --------------------------------------------------------------
         %%%% Estimate 3D areas and RUGOSITY
         %%%% --------------------------------------------------------------
@@ -1392,7 +1233,7 @@ for t = 1:META.nb_time_steps
         % 1) Algal cover: total cover (%) of each algal type over the grid at time step t
         RESULT.algal_pct(n,t+1,:) = 100*full(sum([metapop(n).algal(:).cover_cm2]))./sum(REEF(n).substrate_SA_cm2)  ;
         
-       
+        
         % 2) Coral cover: size structure of coral populations at t
         for s=1:META.nb_coral_types
             
@@ -1409,9 +1250,9 @@ for t = 1:META.nb_time_steps
                 % include all colonies
                 living_coral_heat_tolerances = metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2>0) ;
                 % do not include recruits
-%                 living_coral_heat_tolerances = metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2>1) ;
+                %                 living_coral_heat_tolerances = metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2>1) ;
                 % include only adol + adults
-%                 living_coral_heat_tolerances = metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2>CORAL.size_threshold_wcm);
+                %                 living_coral_heat_tolerances = metapop(n).coral(s).heat_tolerance(metapop(n).coral(s).cover_cm2>CORAL.size_threshold_wcm);
                 RESULT.heat_tolerances_mu(n,t+1,s) = full(mean(living_coral_heat_tolerances,'all'));
                 RESULT.heat_tolerances_sd(n,t+1,s) = full(std(living_coral_heat_tolerances,0,'all'));
                 RESULT.heat_tolerances_975(n,t+1,s) = full(prctile(living_coral_heat_tolerances,2.5,'all'));
@@ -1455,18 +1296,18 @@ for t = 1:META.nb_time_steps
             RESULT.rugosity(n,t+1)=rugosity;
             RESULT.SI_reef(n,t+1)=SI_reef;
         end
-    %n    
-    end % end of the loop over the n reefs 
-% timeElapsed = toc;
+        %n
+    end % end of the loop over the n reefs
+    % timeElapsed = toc;
     %t
-%     rng(seed)
-%     %%%% --------------------------------------------------------------
+    %     rng(seed)
+    %     %%%% --------------------------------------------------------------
     %%%% REGISTER RESTORATION NEEDS FOR THE NEXT STEP
     %%%% --------------------------------------------------------------
     
     if META.doing_restoration == 1
         
-        % 1) Coral outplanting -----------------------------------------  
+        % 1) Coral outplanting -----------------------------------------
         if META.nb_reefs_outplanted > 0
             
             if t < META.nb_time_steps && META.doing_coral_outplanting(t+1)==1
@@ -1508,13 +1349,13 @@ for t = 1:META.nb_time_steps
                 else % fixed density of outplants
                     
                     RECORD.outplanted_reefs(META.priority_list_Outplant,t+1)=1;
-
+                    
                 end
             end
         end
-
-       
-        % 2) Larval enrichment -----------------------------------------  
+        
+        
+        % 2) Larval enrichment -----------------------------------------
         if META.nb_reefs_enriched > 0
             
             if t < META.nb_time_steps && META.doing_larval_enrichment(t+1)==1
@@ -1531,7 +1372,7 @@ for t = 1:META.nb_time_steps
                     r = 0;
                     Total_available_larvae = META.total_nb_larvae;
                     All_reef_nb_corals_to_enrich = zeros(size(All_reef_states));
-
+                    
                     while Total_available_larvae > 0 && r+1 <= length(Priority_reef_ID) % this stops when no more priorty reefs
                         r = r + 1;
                         reef_index = find(META.reef_ID == Priority_reef_ID(r));
@@ -1551,27 +1392,27 @@ for t = 1:META.nb_time_steps
                 else % fixed density of larvae
                     
                     RECORD.enriched_reefs(META.priority_list_LarvalEnrich,t+1)=1;
-
+                    
                 end
             end
         end
-
+        
         
         % 3) Fogging stabilisation -------------------------------------
         if META.nb_reefs_fogged > 0
             
             if t < META.nb_time_steps && iseven(t+1)==0 && META.doing_fogging(t+1)==1
-
+                
                 RECORD.fogged_reefs(META.priority_list_Fogging,t+1)=1;
-
+                
                 % fogging just reduces the bleaching mortality predicted by
                 % DHW (see initialisation above)
                 bleaching_mortalities(META.priority_list_Fogging,t+1) = ...
-                    bleaching_mortalities(META.priority_list_Fogging,t+1)*META.bleaching_mortality_under_fogging;     
+                    bleaching_mortalities(META.priority_list_Fogging,t+1)*META.bleaching_mortality_under_fogging;
             end
         end
-
-       
+        
+        
         % 3) Rubble stabilisation -------------------------------------
         if META.nb_reefs_stabilised > 0
             
@@ -1589,9 +1430,9 @@ for t = 1:META.nb_time_steps
                     nb_restored_reefs = META.nb_reefs_stabilised ;
                     nb_restored_reefs(nb_restored_reefs>length(Priority_reef_ID)) = length(Priority_reef_ID);
                     
-                    % Give a green light for for rubble stabilisation at the next step (if timing enables it) 
+                    % Give a green light for for rubble stabilisation at the next step (if timing enables it)
                     RECORD.stabilised_reefs(Priority_reef_ID(1:nb_restored_reefs),t+1)=1;
-                                        
+                    
                 end
             end
         end
@@ -1620,10 +1461,10 @@ for t = 1:META.nb_time_steps
     %%%% --------------------------------------------------------------
     %%%% Record individual colonies
     %%%% --------------------------------------------------------------
-    if META.track_populations == 1       
+    if META.track_populations == 1
         [environ_list,colony_list] = f_track_populations(environ_list,colony_list,metapop(n).algal,metapop(n).coral,t,META,REEF(n).grazable_cell);
     end
-        
+    
 end % end of the time steps loop for a single simulation
 
 

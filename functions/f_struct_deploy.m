@@ -1,6 +1,7 @@
 % -------------------------------------------------------------------------
 % Y.-M. Bozec, MSEL, created Aug 2015.
 % For optimization
+% Updated by Liam Lachs to include heat toleance adaptation, 12/2023
 % -------------------------------------------------------------------------
 
 function [coral_cm2, surface_cm2, volume_cm3, coral_age, clade, heat_tolerance, colony_ID, species_ID] = f_struct_deploy(coral)

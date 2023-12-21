@@ -17,43 +17,18 @@ META.nb_time_steps = nb_time_steps;
 
 %% Reef areas
 load('PAL_REEF_POLYGONS_2022.mat');
-% PAL_REEFS.Reference_Area_km2 = PAL_REEFS.Reference_Area_km2_allReef_volonoi;
-% PAL_REEFS.Reference_Area_km2 = PAL_REEFS.Reference_Area_km2_allReef_connect;
 PAL_REEFS.Reference_Area_km2 = ones(95,1);
-
-% load('GBR_REEF_POLYGONS_2022.mat') 
-% New reef areas based on the 2D/3D surface areas of geomorphic classes down to 20m depth (Roelfsema et al. 2021 Rem. Sens.).
-% Selected classes are those likely dominated by corals (Roelfsema comm. pers.): Outer Reef flat | Reef Crest | Sheltered Reef Slope | Reef Slope
-% Five estimates of reef area (km2):
-% . Reference_Area_km2: reef area of the reference reef outline (GBR_REEF_FEATURES.shp). Previously named 'HabitatAreaKm2'
-% . Geom_2D_Area_km2: 2D geomorphic area from the 2021 GBRMPA-UQ mapping product (773 reefs had no value -> filled using Reference_Area_km2)
-% . GeomCH_2D_Area_km2: 2D geom. area only for 'Coral Habitat' classes (Rolefsema et al 2021). Missing values estimated from Geom_2D_Area_km2.
-% . Geom_3D_Area_km2: 3D geom. area from the 2021 GBRMPA-UQ mapping product (missing values estimated from Geom_2D_Area_km2)
-% . GeomCH_3D_Area_km2: 3D geom. area only for 'Coral Habitat' classes. Missing values estimated from Geom_3D_Area_km2
-% Now contains the UNIQUE_ID of the GBRMPA shapefile GBR_REEF_FEATURES.shp. GBRMPA reef names and ID checked by Caro.
  
 %% Reef selection
 META.reef_ID = (1:95)'; % Entire Palau
-% META.reef_ID = GBR_REEFS.Reef_ID(GBR_REEFS.LAT<-15.4 & GBR_REEFS.LAT >-15.7); % Region around Moore reef
-% META.reef_ID = GBR_REEFS.Reef_ID(GBR_REEFS.LAT<-15.76 & GBR_REEFS.LAT >-17.34); % Cairns region reduced (190 reefs) for restoration
-% META.reef_ID = GBR_REEFS.Reef_ID(GBR_REEFS.LAT<-16.3 & GBR_REEFS.LAT >-16.7); % Cairns region reduced (190 reefs) for restoration
-
-%% Simulating only the 4 reefs of the Moore Reef cluster:
-% META.reef_ID = [695 ; 697 ; 969 ; 970]; % Moore cluster (CANNOT RUN ONE REEF ONLY -> COTS CONTROL WILL CRASH)
-% Need to cancel connectivity below and replace META.coral_immigration
-% load('/home/ym/REEFMOD/REEFMOD_GBR_OUTPUTS/GBR.6.7_Mar2022/MOORE/Moore_immigration_rcp26.mat')
-% For this in order to work, the code that sets the Moore reef cluster deployment areas (L97-123 in settings_RESTORATION)
-% has to be commented because it requires 190 reefs to run
 
 META.nb_reefs = length(META.reef_ID);
-META.outside_reef_ID = []; %GBR_REEFS.Reef_ID(ismember(GBR_REEFS.Reef_ID,META.reef_ID)==0); %note this is empty when all 3,806 reefs are included
+META.outside_reef_ID = [];  %note this is empty when all reefs are included
 META.reef_lat = PAL_REEFS.LAT(META.reef_ID); % needed for CoTS control
 META.reef_lon = PAL_REEFS.LON(META.reef_ID); % needed for CoTS control
 
 % Define which habitat area to use
 META.area_habitat = PAL_REEFS.Reference_Area_km2(META.reef_ID);
-% META.area_habitat = GBR_REEFS.GeomCH_3D_Area_km2(META.reef_ID);
-% META.area_habitat = GBR_REEFS.GeomCH_2D_Area_km2(META.reef_ID); % Just to align with IPMF (for the BCA)
 
 % Enlarge reef grids to deploy in specific sites (set to all reefs)
 % Future version will allow setting a specific grid size to each reef individually
@@ -67,7 +42,7 @@ META.area_habitat = PAL_REEFS.Reference_Area_km2(META.reef_ID);
 % NOTE: don't refine COTS parameters here because they will be erased by settings_COTS
 META.doing_bleaching = OPTIONS.doing_bleaching ;
 META.deterministic_bleaching = 1; % option for generating deterministic (1) or random (0) mortalities from DHWs
-META.DHW_threshold = 3 ; % DHW threshold that triggers bleaching
+META.DHW_threshold = 3 ; % DHW threshold that triggers bleaching % ignored for DHWadaptation
 
 
 % Adjust bleaching to align with the shallow (-2m) mortality recorded by Hughes et al. (2018) or deep (-7m) as in Baird et al. (2018)
@@ -76,7 +51,6 @@ CORAL.bleaching_depth = 1; % shallow bleaching as simulated for hindcast (Bozec 
 
 % set heritability as per options
 CORAL.DHWbleaching_mortality_h2 = OPTIONS.DHWbleaching_mortality_h2;
-CORAL.generation_length = OPTIONS.generation_length;
 
 META.doing_hurricanes = OPTIONS.doing_cyclones ;
 META.random_hurricanes = 0; % put 0 to apply a specific scenario (1 imposes random occurence)
@@ -163,8 +137,6 @@ META.doing_restoration = OPTIONS.doing_restoration;
 %% DHW bleaching and adaptation (Liam)
 META.doing_DHWbleaching = OPTIONS.doing_DHWbleaching;
 META.doing_DHWadaptation = OPTIONS.doing_DHWadaptation ;
-META.doing_DHWadaptation_covZw = OPTIONS.doing_DHWadaptation_covZw; 
-META.doing_DHWadaptation_VA = OPTIONS.doing_DHWadaptation_VA; % doing additive genetic inheritance
 META.doing_DHWadaptation_Zp = OPTIONS.doing_DHWadaptation_Zp;
 META.doing_coral_age = OPTIONS.doing_coral_age; % for overlapping generations in breeding equation
 META.doing_DHWbleaching_TaxaSensivities = OPTIONS.doing_DHWbleaching_TaxaSensivities ;
@@ -202,7 +174,6 @@ rng(simul); % to get a repeatable scheme of random number generation in RAND, RA
 
 INITIALISATION
 
-% settings_GBR
 settings_PAL
 
 if META.doing_restoration == 1

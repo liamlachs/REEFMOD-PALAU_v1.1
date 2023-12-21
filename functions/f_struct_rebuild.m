@@ -1,6 +1,7 @@
 % -------------------------------------------------------------------------
 % Y.-M. Bozec, MSEL, created Aug 2015.
 % For optimization
+% Updated by Liam Lachs to include heat toleance adaptation, 12/2023
 % -------------------------------------------------------------------------
 
 function [coral] = f_struct_rebuild (coral_cm2, surface_cm2, volume_cm3, coral_age, colony_ID, clade, heat_tolerance, species_ID, nb_coral_types, doing_clades, doing_DHWbleaching, doing_coral_age, doing_3D)

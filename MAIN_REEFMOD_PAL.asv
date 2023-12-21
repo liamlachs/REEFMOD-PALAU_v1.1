@@ -17,13 +17,13 @@ function MAIN_REEFMOD_PAL(h2, ssp, gcm, ss, BH_a, BH_b)
 % ssp=1; % greenhouse gas emissions scenario (Shared Socioeconoic Pathway)
 % gcm=11; % Global Circulation Model
 % ss = 0; % Self-seeding adjustment factor
-% BH_a = 0; % Beverton-Holt function density dependent settlement adjustment factor
-% BH_b = 0; % Beverton-Holt function density dependent settlement adjustment factor
+% BH_a = 0; % Beverton-Holt  adjustment factor
+% BH_b = 0; % Self-seeding adjustment factor
 
 
 clearvars -except h2 ssp gcm ss BH_a BH_b
 
-SaveDir ='outputs\';
+SaveDir ='outputs';
 
 NB_SIMULATIONS = 1; % Number of repeated runs
 
@@ -61,9 +61,9 @@ OPTIONS.doing_COTS = options(3);
 OPTIONS.doing_WQ = options(4);
 
 OPTIONS.doing_size_frequency = 1; % for tracking population size structure (incl. juveniles)
-OPTIONS.doing_adaptation = 0 ;
-OPTIONS.adaptation_parms = [ 1 1 1.5 ]; % sigma cold/sigma hot/esd
-OPTIONS.doing_restoration = options(5) ;
+% OPTIONS.doing_adaptation = 0 ;
+% OPTIONS.adaptation_parms = [ 1 1 1.5 ]; % sigma cold/sigma hot/esd
+% OPTIONS.doing_restoration = options(5) ;
 
 OPTIONS.doing_DHWbleaching = 1; %0 ;
 OPTIONS.doing_DHWadaptation = 1;  %0 ;

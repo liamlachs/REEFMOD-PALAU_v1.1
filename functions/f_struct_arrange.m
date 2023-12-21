@@ -1,6 +1,7 @@
 % -------------------------------------------------------------------------
 % Y.-M. Bozec, MSEL, created Aug 2015.
 % For optimization
+% Updated by Liam Lachs to include heat toleance adaptation, 12/2023
 % -------------------------------------------------------------------------
 
 function [coral, genes] = f_struct_arrange(coral, genes, META)
