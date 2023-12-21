@@ -33,7 +33,7 @@ NB_SIMULATIONS = 1; % Number of repeated runs
 
 NB_TIME_STEPS = 26+158; % HINDCAST+FORECAST summer 2008 - winter 2099
 
-OutputName = 'FORECAST_PAL_h2'; 
+OutputName = 'A2_FORECAST_PAL_h2'; 
 
 options = [0 1 0 0 0]; % bleaching only - see options below
 
