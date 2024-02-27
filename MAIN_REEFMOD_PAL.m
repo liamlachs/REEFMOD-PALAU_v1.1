@@ -4,7 +4,7 @@
 %
 % This is updated version of REFMOD-PALAU developed from REEFMOD-GBR v6.8 (Y-M Bozec) to be used 
 % to capture adaptation through natural selection for heat tolerance. Implements individual
-% tracking of heat tolerance and trait inheritance, and includes demographic sensitivty analyses.
+% tracking of heat tolerance and trait inheritance, and includes demographic sensitivity analyses.
 %
 % Updated by Liam Lachs, liamlachs@gmail.com, 02/2024
 %
