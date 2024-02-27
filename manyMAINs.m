@@ -1,6 +1,6 @@
 %__________________________________________________________________________
 %
-% Local scheduling script
+% Local scheduling script 
 %
 % This script is used to submit different REEFMOD instances locally, with specific parameters
 %
