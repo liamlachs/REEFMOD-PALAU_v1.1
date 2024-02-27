@@ -101,6 +101,7 @@ if OPTIONS.doing_BH_beta_test; ET_bhb=['_ETb' regexprep(regexprep(char(string(BH
 ET_addon = regexprep([ET_ss ET_bha ET_bhb], '_ET','');
 if ~isempty(ET_addon); ET_addon = ['_ET' ET_addon]; end
 % ET_addon
+% Additional analyses added upon manuscript revision
 % Test the recovery rate (RR) after a catastrophic disturbance
 OPTIONS.RR_test = 1 % set as 0 (off) or 1 (on)
 % end of ecological tests
