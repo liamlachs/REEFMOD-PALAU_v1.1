@@ -2,11 +2,11 @@
 %
 % REEFMOD-PALAU MAIN SCRIPT
 %
-% This is updated version developed from REEFMOD-GBR v6.8 (Y-M Bozec) to be used to capture adaptation 
-% through natural selection for heat tolerance. Implements individual tracking of heat tolerance
-% and trait inheritance.
+% This is updated version of REFMOD-PALAU developed from REEFMOD-GBR v6.8 (Y-M Bozec) to be used 
+% to capture adaptation through natural selection for heat tolerance. Implements individual
+% tracking of heat tolerance and trait inheritance, and includes demographic sensitivty analyses.
 %
-% Updated by Liam Lachs, liamlachs@gmail.com, 12/2023
+% Updated by Liam Lachs, liamlachs@gmail.com, 02/2024
 %
 % Yves-Marie Bozec, y.bozec@uq.edu.au, 08/2022
 %__________________________________________________________________________
@@ -101,6 +101,8 @@ if OPTIONS.doing_BH_beta_test; ET_bhb=['_ETb' regexprep(regexprep(char(string(BH
 ET_addon = regexprep([ET_ss ET_bha ET_bhb], '_ET','');
 if ~isempty(ET_addon); ET_addon = ['_ET' ET_addon]; end
 % ET_addon
+% Test the recovery rate (RR) after a catastrophic disturbance
+OPTIONS.RR_test = 1 % set as 0 (off) or 1 (on)
 % end of ecological tests
 
 % Below options are used to force simulations with specific starting conditions (eg, building LUT for the RRAP-RE)
